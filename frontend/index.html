@@ -1,196 +1,221 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SignSpeak | Real-time Sign Language Translation</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="bg-orbs" aria-hidden="true">
-      <span class="orb orb-1"></span>
-      <span class="orb orb-2"></span>
-      <span class="orb orb-3"></span>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SignSpeak | Real-time Sign Language Translation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+  </div>
+
+  <header class="nav">
+    <div class="brand">
+      <span class="brand-mark">SS</span>
+      <span class="brand-name">SignSpeak</span>
     </div>
+    <nav class="nav-links">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#deploy" class="nav-link">Deploy</a>
+      <a href="#developer" class="nav-link">Developer</a>
+    </nav>
+    <a class="btn btn-ghost" href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation" target="_blank"
+      rel="noreferrer">
+      GitHub
+    </a>
+  </header>
 
-    <header class="nav">
-      <div class="brand">
-        <span class="brand-mark">SS</span>
-        <span class="brand-name">SignSpeak</span>
+  <main>
+    <section class="hero" data-reveal>
+      <div class="hero-copy">
+        <p class="eyebrow">Real-time gesture intelligence</p>
+        <h1>Translate Sign Language in Real Time.</h1>
+        <p class="lead">
+          A fast, lightweight pipeline powered by MediaPipe and OpenCV. Capture
+          hand landmarks, train a compact classifier, and run live inference
+          in milliseconds.
+        </p>
+        <div class="cta-row">
+          <a href="#deploy" class="btn btn-primary">Run locally</a>
+          <a href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation" target="_blank" rel="noreferrer"
+            class="btn btn-outline">
+            Get the code
+          </a>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-value">21</span>
+            <span class="stat-label">Landmarks per hand</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">2</span>
+            <span class="stat-label">Hands tracked</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">5+</span>
+            <span class="stat-label">Gesture classes</span>
+          </div>
+        </div>
       </div>
-      <nav class="nav-links">
-        <a href="#how" class="nav-link">How it works</a>
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#deploy" class="nav-link">Deploy</a>
-      </nav>
-        <a
-          class="btn btn-ghost"
-          href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub
-        </a>
-    </header>
+      <div class="hero-panel">
+        <div class="panel-header">
+          <span class="pulse"></span>
+          Live preview
+        </div>
+        <div class="panel-body">
+          <div class="video-shell">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+          </div>
+          <div class="panel-label">Prediction: <strong id="prediction">--</strong></div>
+          <div class="panel-status" id="status">Loading model…</div>
+        </div>
+      </div>
+    </section>
 
-    <main>
-      <section class="hero" data-reveal>
-        <div class="hero-copy">
-          <p class="eyebrow">Real-time gesture intelligence</p>
-          <h1>Translate Sign Language in Real Time.</h1>
-          <p class="lead">
-            A fast, lightweight pipeline powered by MediaPipe and OpenCV. Capture
-            hand landmarks, train a compact classifier, and run live inference
-            in milliseconds.
+    <section id="features" class="section features" data-reveal>
+      <div class="section-title">
+        <h2>Built for speed and clarity</h2>
+        <p>
+          The pipeline keeps the moving parts small so you can iterate on new
+          gestures quickly.
+        </p>
+      </div>
+      <div class="feature-grid">
+        <div class="card">
+          <h3>Landmark Precision</h3>
+          <p>
+            MediaPipe extracts 21 keypoints per hand for stable, repeatable
+            feature vectors.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Lightweight Model</h3>
+          <p>
+            Random Forest training keeps inference fast without expensive GPU
+            requirements.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Real-time Feedback</h3>
+          <p>
+            On-screen predictions make it easy to validate each sign while you
+            capture data.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section pipeline" data-reveal>
+      <div class="section-title">
+        <h2>From webcam to prediction</h2>
+        <p>Collect, train, and deploy in a tight loop.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="step-count">01</span>
+          Capture labeled images for each sign.
+        </li>
+        <li>
+          <span class="step-count">02</span>
+          Extract landmarks into `data.pickle`.
+        </li>
+        <li>
+          <span class="step-count">03</span>
+          Train a classifier and save `model.p`.
+        </li>
+        <li>
+          <span class="step-count">04</span>
+          Run live inference with on-screen predictions.
+        </li>
+      </ol>
+    </section>
+
+    <section id="deploy" class="section deploy" data-reveal>
+      <div class="deploy-card">
+        <div>
+          <h2>Deploy-ready, open source</h2>
+          <p>
+            Pair this frontend with your Python pipeline and ship a clean
+            landing page for demos, class projects, or client work.
           </p>
           <div class="cta-row">
-            <a href="#deploy" class="btn btn-primary">Run locally</a>
-            <a
-              href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation"
-              target="_blank"
-              rel="noreferrer"
-              class="btn btn-outline"
-            >
-              Get the code
+            <a href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation" target="_blank" rel="noreferrer"
+              class="btn btn-primary">
+              View on GitHub
             </a>
-          </div>
-          <div class="stats">
-            <div class="stat">
-              <span class="stat-value">21</span>
-              <span class="stat-label">Landmarks per hand</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">2</span>
-              <span class="stat-label">Hands tracked</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">5+</span>
-              <span class="stat-label">Gesture classes</span>
-            </div>
+            <a href="#install" class="btn btn-ghost">Setup guide</a>
           </div>
         </div>
-        <div class="hero-panel">
-          <div class="panel-header">
-            <span class="pulse"></span>
-            Live preview
-          </div>
-          <div class="panel-body">
-            <div class="video-shell">
-              <video id="video" autoplay playsinline muted></video>
-              <canvas id="overlay"></canvas>
-            </div>
-            <div class="panel-label">Prediction: <strong id="prediction">--</strong></div>
-            <div class="panel-status" id="status">Loading model…</div>
-          </div>
-        </div>
-      </section>
-
-      <section id="features" class="section features" data-reveal>
-        <div class="section-title">
-          <h2>Built for speed and clarity</h2>
-          <p>
-            The pipeline keeps the moving parts small so you can iterate on new
-            gestures quickly.
-          </p>
-        </div>
-        <div class="feature-grid">
-          <div class="card">
-            <h3>Landmark Precision</h3>
-            <p>
-              MediaPipe extracts 21 keypoints per hand for stable, repeatable
-              feature vectors.
-            </p>
-          </div>
-          <div class="card">
-            <h3>Lightweight Model</h3>
-            <p>
-              Random Forest training keeps inference fast without expensive GPU
-              requirements.
-            </p>
-          </div>
-          <div class="card">
-            <h3>Real-time Feedback</h3>
-            <p>
-              On-screen predictions make it easy to validate each sign while you
-              capture data.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section id="how" class="section pipeline" data-reveal>
-        <div class="section-title">
-          <h2>From webcam to prediction</h2>
-          <p>Collect, train, and deploy in a tight loop.</p>
-        </div>
-        <ol class="steps">
-          <li>
-            <span class="step-count">01</span>
-            Capture labeled images for each sign.
-          </li>
-          <li>
-            <span class="step-count">02</span>
-            Extract landmarks into `data.pickle`.
-          </li>
-          <li>
-            <span class="step-count">03</span>
-            Train a classifier and save `model.p`.
-          </li>
-          <li>
-            <span class="step-count">04</span>
-            Run live inference with on-screen predictions.
-          </li>
-        </ol>
-      </section>
-
-      <section id="deploy" class="section deploy" data-reveal>
-        <div class="deploy-card">
-          <div>
-            <h2>Deploy-ready, open source</h2>
-            <p>
-              Pair this frontend with your Python pipeline and ship a clean
-              landing page for demos, class projects, or client work.
-            </p>
-            <div class="cta-row">
-              <a
-                href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation"
-                target="_blank"
-                rel="noreferrer"
-                class="btn btn-primary"
-              >
-                View on GitHub
-              </a>
-              <a href="#install" class="btn btn-ghost">Setup guide</a>
-            </div>
-          </div>
-          <div class="deploy-note">
-            <p class="note-title">Quick start</p>
-            <pre id="install"><code>python3 -m venv .venv
+        <div class="deploy-note">
+          <p class="note-title">Quick start</p>
+          <pre id="install"><code>python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 HAND_LANDMARKER_MODEL=./hand_landmarker.task .venv/bin/python inference_classifier.py</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="developer" class="section developer" data-reveal>
+      <div class="section-title">
+        <h2>Meet the Developer</h2>
+        <p>The mind behind SignSpeak</p>
+      </div>
+      <div class="developer-card">
+        <div class="developer-image">
+          <img src="RahimShah.jpeg" alt="Rahim Shah" />
+        </div>
+        <div class="developer-info">
+          <h3>Rahim Shah</h3>
+          <p class="developer-role">AI & Software Developer</p>
+          <p class="developer-bio">
+            Computer Science graduate focused on data science and applied machine learning, with experience building
+            end-to-end ML systems across computer vision, NLP, and predictive analytics. Interested in developing
+            reliable, real-world AI solutions with attention to data quality, performance, and practical impact.
+          </p>
+          <div class="developer-links">
+            <a href="https://github.com/rahimshah-dev" target="_blank" rel="noreferrer" class="btn btn-outline">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/rahimshahshah/" target="_blank" rel="noreferrer"
+              class="btn btn-outline">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+              LinkedIn
+            </a>
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+  </main>
 
-    <footer class="footer">
-      <p>Made for rapid gesture experiments. Open-source and ready to extend.</p>
-      <a
-        href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation"
-        target="_blank"
-        rel="noreferrer"
-        class="footer-link"
-      >
-        Get the code on GitHub
-      </a>
-    </footer>
+  <footer class="footer">
+    <p>Made for rapid gesture experiments. Open-source and ready to extend.</p>
+    <a href="https://github.com/rahimshah-dev/AI_Sign_Language_Translation" target="_blank" rel="noreferrer"
+      class="footer-link">
+      Get the code on GitHub
+    </a>
+  </footer>
 
-    <script type="module" src="app.js"></script>
-  </body>
+  <script type="module" src="app.js"></script>
+</body>
+
 </html>

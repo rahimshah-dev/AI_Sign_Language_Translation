@@ -1,8 +1,12 @@
 
+import os
+import time
 import pickle
 import cv2
 import mediapipe as mp
 import numpy as np
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
 # Load the trained model
 model_dict = pickle.load(open('./model.p', 'rb'))
@@ -10,85 +14,129 @@ model = model_dict['model']
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)  # Change the camera index if needed
+if not cap.isOpened():
+    print("Error: Could not open camera.")
+    raise SystemExit(1)
 
-# Initialize Mediapipe Hands
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
+# Determine expected feature length from the model
+def _expected_feature_length(trained_model, fallback=42):
+    n = getattr(trained_model, "n_features_in_", None)
+    if isinstance(n, (int, np.integer)) and n > 0:
+        return int(n)
+    return fallback
+
+EXPECTED_FEATURES = _expected_feature_length(model)
+
+def _normalize_feature_length(vec, expected_len):
+    if expected_len <= 0:
+        return vec
+    if len(vec) < expected_len:
+        return vec + [0] * (expected_len - len(vec))
+    if len(vec) > expected_len:
+        return vec[:expected_len]
+    return vec
+
+# Initialize MediaPipe Hand Landmarker (Tasks API)
+MODEL_PATH = os.environ.get("HAND_LANDMARKER_MODEL", "./hand_landmarker.task")
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(
+        "Missing hand landmarker model. Download a MediaPipe Hand Landmarker "
+        "model (.task) and place it at ./hand_landmarker.task, or set "
+        "HAND_LANDMARKER_MODEL to its path."
+    )
+
+BaseOptions = python.BaseOptions
+HandLandmarker = vision.HandLandmarker
+HandLandmarkerOptions = vision.HandLandmarkerOptions
+RunningMode = getattr(vision, "RunningMode", None) or getattr(vision, "VisionRunningMode", None)
+if RunningMode is None:
+    raise RuntimeError("Unsupported mediapipe.tasks vision running mode API.")
+
+options = HandLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=MODEL_PATH),
+    running_mode=RunningMode.VIDEO,
+    num_hands=2,
+    min_hand_detection_confidence=0.3,
+    min_hand_presence_confidence=0.3,
+    min_tracking_confidence=0.3,
+)
 
 # Mapping of labels
-labels_dict = {0: 'Yes', 1: 'No', 2: 'Hello', 3: 'I love you',4: 'Thank you'}
+labels_dict = {0: 'Yes', 1: 'No', 2: 'Hello', 3: 'I love you', 4: 'Thank you'}
 
-while True:
-    # Read a frame from the camera
-    ret, frame = cap.read()
+with HandLandmarker.create_from_options(options) as landmarker:
+    while True:
+        # Read a frame from the camera
+        ret, frame = cap.read()
 
-    if not ret:
-        print("Error: Could not read frame.")
-        break
+        if not ret:
+            print("Error: Could not read frame.")
+            break
 
-    # Variables for hand landmarks and data
-    data_aux = []
-    x_ = []
-    y_ = []
+        # Variables for hand landmarks and data
+        data_aux = []
+        x_ = []
+        y_ = []
 
-    # Get frame dimensions
-    H, W, _ = frame.shape
+        # Get frame dimensions
+        H, W, _ = frame.shape
 
-    # Convert the frame to RGB
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Convert the frame to RGB
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # Process hand landmarks using Mediapipe
-    results = hands.process(frame_rgb)
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            mp_drawing.draw_landmarks(
-                frame,  # image to draw
-                hand_landmarks,  # model output
-                mp_hands.HAND_CONNECTIONS,  # hand connections
-                mp_drawing_styles.get_default_hand_landmarks_style(),
-                mp_drawing_styles.get_default_hand_connections_style())
+        # Process hand landmarks using MediaPipe Tasks
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        results = landmarker.detect_for_video(mp_image, int(time.time() * 1000))
 
-        for hand_landmarks in results.multi_hand_landmarks:
-            for i in range(len(hand_landmarks.landmark)):
-                x = hand_landmarks.landmark[i].x
-                y = hand_landmarks.landmark[i].y
-                x_.append(x)
-                y_.append(y)
+        if results.hand_landmarks:
+            for hand_landmarks in results.hand_landmarks:
+                for lm in hand_landmarks:
+                    x_.append(lm.x)
+                    y_.append(lm.y)
 
-            for i in range(len(hand_landmarks.landmark)):
-                x = hand_landmarks.landmark[i].x
-                y = hand_landmarks.landmark[i].y
-                data_aux.append(x - min(x_))
-                data_aux.append(y - min(y_))
+                min_x = min(x_)
+                min_y = min(y_)
+                for lm in hand_landmarks:
+                    data_aux.append(lm.x - min_x)
+                    data_aux.append(lm.y - min_y)
 
-        # Assuming 21 landmarks, so the total number of features should be 21 * 2 = 42
-        if len(data_aux) == 42:
-            # Pad the data_aux to match the expected shape (84 features)
-            data_aux = data_aux + [0] * 42  # This assumes zero-padding, adjust as needed
+                for lm in hand_landmarks:
+                    cx = int(lm.x * W)
+                    cy = int(lm.y * H)
+                    cv2.circle(frame, (cx, cy), 2, (0, 255, 0), -1)
 
-            # Calculate bounding box coordinates
-            x1 = int(min(x_) * W) - 10
-            y1 = int(min(y_) * H) - 10
-            x2 = int(max(x_) * W) - 10
-            y2 = int(max(y_) * H) - 10
+            if len(data_aux) > 0:
+                data_aux = _normalize_feature_length(data_aux, EXPECTED_FEATURES)
 
-            # Predict using the trained model
-            prediction = model.predict([np.asarray(data_aux)])
-            predicted_character = labels_dict.get(int(prediction[0]), 'Unknown')
+                # Calculate bounding box coordinates
+                x1 = int(min(x_) * W) - 10
+                y1 = int(min(y_) * H) - 10
+                x2 = int(max(x_) * W) - 10
+                y2 = int(max(y_) * H) - 10
 
-            # Display the result on the frame
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
-            cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
-                        cv2.LINE_AA)
+                # Predict using the trained model
+                prediction = model.predict([np.asarray(data_aux)])
+                predicted_character = labels_dict.get(int(prediction[0]), 'Unknown')
 
-    # Display the frame
-    cv2.imshow('frame', frame)
+                # Display the result on the frame
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
+                cv2.putText(
+                    frame,
+                    predicted_character,
+                    (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.3,
+                    (0, 0, 0),
+                    3,
+                    cv2.LINE_AA,
+                )
 
-    # Break the loop if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        # Display the frame
+        cv2.imshow('frame', frame)
+
+        # Break the loop if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 # Release the camera and close all windows
 cap.release()
